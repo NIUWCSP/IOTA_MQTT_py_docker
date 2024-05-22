@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 
@@ -17,6 +18,8 @@ mqtt_topic = os.getenv('MQTT_TOPIC')
 mqtt_username = os.getenv('MQTT_USERNAME')
 mqtt_password = os.getenv('MQTT_PASSWORD')
 
+# 創建BLOCK_URL空的dictionary
+block_url_dic = dict()
 
 # 定義 MQTT 回調函數
 def on_message(client, userdata, message):
@@ -33,14 +36,22 @@ def on_message(client, userdata, message):
         tag, key = parts[1], parts[2]
         #print(f"tag:{tag},key:{key}")
 
-        # 如果 'tag' 包含 'BLOCK_URL'，則保存消息
+        # 如果 'key' 包含 'BLOCK_URL'，則保存消息
         if 'BLOCK_URL' in key:
             try:
                 message_content = json.loads(message_str)
-                print(f"Received message from topic {message.topic}: {message_str}")
+                #print(f"Received message from topic {message.topic}: {message_str}")
             except json.JSONDecodeError:
                 message_content = message_str
                 print(f"Received message from topic {message.topic}: {message_str}")
+                
+            # 添加 tag 和當前時間到消息
+            current_time = datetime.utcnow().isoformat()            
+            block_url_dic[tag] = current_time
+            
+            print(f"block_url_dic: {block_url_dic}")
+            
+            
     except Exception as e:
         logging.error("Error in on_message: %s", e)
 
